@@ -14,11 +14,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import coil3.compose.LocalPlatformContext
 import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
-import coil3.imageLoader
+import coil3.SingletonImageLoader
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
 import me.saket.telephoto.zoomable.EnabledZoomGestures
 import me.saket.telephoto.zoomable.ZoomableImage
@@ -39,7 +39,7 @@ import me.saket.telephoto.zoomable.rememberZoomableState
  * )
  *
  * ZoomableAsyncImage(
- *   model = ImageRequest.Builder(LocalContext.current)
+ *   model = ImageRequest.Builder(LocalPlatformContext.current)
  *     .data("https://example.com/image.jpg")
  *     .build(),
  *   contentDescription = …
@@ -56,7 +56,7 @@ fun ZoomableAsyncImage(
   gestures: EnabledZoomGestures,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -94,7 +94,7 @@ fun ZoomableAsyncImage(
   contentDescription: String?,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -138,7 +138,7 @@ fun ZoomableAsyncImage(
   contentDescription: String?,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -185,7 +185,7 @@ fun ZoomableAsyncImage(
  *
  * ZoomableImage(
  *   image = ZoomableImageSource.coil(
- *     ImageRequest.Builder(LocalContext.current)
+ *     ImageRequest.Builder(LocalPlatformContext.current)
  *       .data("https://example.com/image.jpg")
  *       .build()
  *   ),
@@ -197,7 +197,7 @@ fun ZoomableAsyncImage(
 @OptIn(ExperimentalCoilApi::class)
 fun ZoomableImageSource.Companion.coil(
   model: Any?,
-  imageLoader: ImageLoader = LocalContext.current.imageLoader
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current)
 ): ZoomableImageSource {
   val model = rememberUpdatedState(model)
   val imageLoader = rememberUpdatedState(imageLoader)
@@ -218,7 +218,7 @@ fun ZoomableAsyncImage(
   contentDescription: String?,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -257,7 +257,7 @@ fun ZoomableAsyncImage(
   gestures: EnabledZoomGestures,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -296,7 +296,7 @@ fun ZoomableAsyncImage(
   contentDescription: String?,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -334,7 +334,7 @@ fun ZoomableAsyncImage(
   contentDescription: String?,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,
@@ -374,7 +374,7 @@ fun ZoomableAsyncImage(
   contentDescription: String?,
   modifier: Modifier = Modifier,
   state: ZoomableImageState = rememberZoomableImageState(rememberZoomableState()),
-  imageLoader: ImageLoader = LocalContext.current.imageLoader,
+  imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
   alpha: Float = DefaultAlpha,
   colorFilter: ColorFilter? = null,
   alignment: Alignment = Alignment.Center,

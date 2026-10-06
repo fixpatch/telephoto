@@ -5,9 +5,12 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.ImageBitmap
 import me.saket.telephoto.subsamplingimage.internal.ImageRegionDecoder
 import me.saket.telephoto.subsamplingimage.internal.SkikoImageRegionDecoder
+import okio.Buffer
+import okio.BufferedSource
 import okio.Closeable
 import okio.FileSystem
 import okio.Path
+import okio.buffer
 
 /**
  * An image stored on a file system. This can be used with image loading
@@ -59,7 +62,9 @@ internal data class SkikoFileImageSource(
   override val preview: ImageBitmap?,
   val onClose: Closeable?,
   val maxDecodedPixels: Long,
-) : SubSamplingImageSource {
+) : SkikoBufferedImageSource {
+
+  override fun peek(): BufferedSource = fileSystem.source(path).buffer()
 
   override suspend fun decoder(): ImageRegionDecoder.Factory {
     return SkikoImageRegionDecoder.Factory(
@@ -78,7 +83,9 @@ internal class SkikoBytesImageSource(
   override val preview: ImageBitmap?,
   private val onClose: Closeable?,
   private val maxDecodedPixels: Long,
-) : SubSamplingImageSource {
+) : SkikoBufferedImageSource {
+
+  override fun peek(): BufferedSource = Buffer().write(bytes)
 
   override suspend fun decoder(): ImageRegionDecoder.Factory {
     return SkikoImageRegionDecoder.Factory(
@@ -92,4 +99,9 @@ internal class SkikoBytesImageSource(
   }
 
   override fun toString(): String = "SkikoBytesImageSource(${bytes.size} bytes)"
+}
+
+internal interface SkikoBufferedImageSource : SubSamplingImageSource {
+  /** Reads the encoded image from its start. Used for inspecting its format. */
+  fun peek(): BufferedSource
 }

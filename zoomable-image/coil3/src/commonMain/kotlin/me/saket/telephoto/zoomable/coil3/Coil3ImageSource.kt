@@ -2,9 +2,6 @@
 
 package me.saket.telephoto.zoomable.coil3
 
-import me.saket.telephoto.subsamplingimage.file
-import me.saket.telephoto.subsamplingimage.contentUriOrNull
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
@@ -14,8 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
+import coil3.compose.LocalPlatformContext
 import coil3.BitmapImage
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
@@ -24,38 +20,36 @@ import coil3.compose.AsyncImagePreviewHandler
 import coil3.compose.LocalAsyncImageModelEqualityDelegate
 import coil3.compose.LocalAsyncImagePreviewHandler
 import coil3.compose.asPainter
-import coil3.decode.DataSource
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.ImageResult
-import coil3.request.Options
 import coil3.request.SuccessResult
-import coil3.request.transitionFactory
+import coil3.request.crossfadeMillis
 import coil3.size.Dimension
 import coil3.size.Precision
 import coil3.size.SizeResolver
-import coil3.toAndroidUri
-import coil3.transition.CrossfadeTransition
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import me.saket.telephoto.subsamplingimage.ImageBitmapOptions
 import me.saket.telephoto.subsamplingimage.SubSamplingImageSource
-import me.saket.telephoto.subsamplingimage.util.canBeSubSampled
-import me.saket.telephoto.subsamplingimage.util.exists
 import me.saket.telephoto.zoomable.ZoomableImageSource
+import me.saket.telephoto.zoomable.coil3.internal.canBeSubSampled
+import me.saket.telephoto.zoomable.coil3.internal.diskCacheImageSource
+import me.saket.telephoto.zoomable.coil3.internal.imageBitmapOptions
+import me.saket.telephoto.zoomable.coil3.internal.ioDispatcher
+import me.saket.telephoto.zoomable.coil3.internal.isLocalImage
+import me.saket.telephoto.zoomable.coil3.internal.localImageSourceOrNull
+import me.saket.telephoto.zoomable.coil3.internal.runBlockingForPreview
+import me.saket.telephoto.zoomable.coil3.internal.toPreviewImageBitmap
 import me.saket.telephoto.zoomable.ZoomableImageSource.PainterDelegate
 import me.saket.telephoto.zoomable.ZoomableImageSource.ResolveResult
 import me.saket.telephoto.zoomable.copy
 import me.saket.telephoto.zoomable.internal.RememberWorker
 import me.saket.telephoto.zoomable.isInScreenshotTest
-import java.io.File
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToInt
 import kotlin.time.Duration
@@ -71,7 +65,7 @@ internal data class Coil3ImageSource(
 
   @Composable
   override fun resolve(canvasSize: Flow<Size>): ResolveResult {
-    val context = LocalContext.current
+    val context = LocalPlatformContext.current
     val modelEqualityDelegate = LocalAsyncImageModelEqualityDelegate.current
     val previewHandler = if (isInScreenshotTest()) LocalAsyncImagePreviewHandler.current else null
 
@@ -192,7 +186,7 @@ private class RealResolver(
       delegate = if (result is SuccessResult && imageSource != null) {
         ZoomableImageSource.SubSamplingDelegate(
           source = imageSource,
-          imageOptions = ImageBitmapOptions(from = (result.image as BitmapImage).bitmap)
+          imageOptions = (result.image as BitmapImage).imageBitmapOptions()
         )
       } else {
         ZoomableImageSource.PainterDelegate(
@@ -206,31 +200,34 @@ private class RealResolver(
     val result = this
     val resultImage = (result as? SuccessResult)?.image
     val source = if (result is SuccessResult && resultImage is BitmapImage) {
-      val preview = resultImage.bitmap.asImageBitmap()
+      val preview = resultImage.toPreviewImageBitmap()
       when {
         // Prefer reading of images directly from files whenever possible because
         // it is significantly faster than reading from their input streams.
         result.diskCacheKey != null -> {
           val diskCache = imageLoader.diskCache!!
-          val snapshot = withContext(Dispatchers.IO) {  // IO because openSnapshot can delete files.
+          val snapshot = withContext(ioDispatcher) {  // IO because openSnapshot can delete files.
             diskCache.openSnapshot(result.diskCacheKey!!)
           }
           if (snapshot == null) {
             null
           } else {
-            SubSamplingImageSource.file(snapshot.data, preview, onClose = snapshot::close)
+            diskCacheImageSource(
+              path = snapshot.data,
+              fileSystem = diskCache.fileSystem,
+              preview = preview,
+              onClose = object : okio.Closeable {
+                override fun close() = snapshot.close()
+              },
+            )
           }
         }
 
-        result.dataSource.let { it == DataSource.DISK || it == DataSource.MEMORY_CACHE } -> {
+        result.isLocalImage() -> {
           // Possible reasons for reaching this code path:
           // - Locally stored images such as assets, resource, etc.
           // - Remote image that wasn't saved to disk because of a "no-store" HTTP header.
-          result.request.mapRequestDataToUriOrNull(imageLoader)
-            ?.let { uri -> SubSamplingImageSource.contentUriOrNull(uri, preview) }
-            ?.takeIf {
-              result.dataSource != DataSource.MEMORY_CACHE || it.exists(request.context)
-            }
+          localImageSourceOrNull(result, imageLoader, preview)
         }
 
         else -> {
@@ -243,30 +240,21 @@ private class RealResolver(
     } else {
       return null
     }
-    return source?.takeIf { it.canBeSubSampled(request.context) }
+    return source?.takeIf { canBeSubSampled(it, request.context) }
   }
 
   private fun ImageResult.crossfadeDuration(): Duration {
-    val transitionFactory = request.transitionFactory
-    return if (this is SuccessResult && transitionFactory is CrossfadeTransition.Factory) {
-      // I'm intentionally not using factory.create() because it optimizes crossfade duration
-      // to zero if the image was fetched from memory cache. SubSamplingImage will only read
-      // bitmaps from the disk so there will always be some delay in showing the image.
-      transitionFactory.durationMillis.milliseconds
+    // I'm intentionally not using the transition factory because it optimizes crossfade duration
+    // to zero if the image was fetched from memory cache. SubSamplingImage will only read
+    // bitmaps from the disk so there will always be some delay in showing the image.
+    val crossfadeMillis = request.crossfadeMillis
+    return if (this is SuccessResult && crossfadeMillis > 0) {
+      crossfadeMillis.milliseconds
     } else {
       Duration.ZERO
     }
   }
 
-  private fun ImageRequest.mapRequestDataToUriOrNull(imageLoader: ImageLoader): Uri? {
-    val dummyOptions = Options(this.context) // Good enough for mappers that only use Context.
-    return when (val mapped = imageLoader.components.map(data, dummyOptions)) {
-      is Uri -> mapped
-      is File -> Uri.parse(mapped.path)
-      is coil3.Uri -> mapped.toAndroidUri()
-      else -> null
-    }
-  }
 }
 
 @OptIn(ExperimentalCoilApi::class)
@@ -276,7 +264,7 @@ private class PreviewResolver(
   previewHandler: AsyncImagePreviewHandler,
 ) : AbstractImageResolver {
 
-  override val resolved: ResolveResult = runBlocking {
+  override val resolved: ResolveResult = runBlockingForPreview {
     val preview = previewHandler.handle(
       imageLoader = imageLoader,
       request = request.newBuilder()
