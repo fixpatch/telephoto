@@ -4,12 +4,14 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.saket.telephoto.subsamplingimage.SkikoSubSamplingDefaults
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.Codec
 import org.jetbrains.skia.Data
@@ -243,10 +245,22 @@ internal class SkikoImageRegionDecoder private constructor(
     fun Factory(
       bytes: suspend () -> ByteArray,
       maxDecodedPixels: Long,
-    ) = ImageRegionDecoder.Factory {
+    ) = ImageRegionDecoder.Factory create@{ params ->
+      val encoded = bytes()
+      for (provider in SkikoSubSamplingDefaults.regionDecoderProviders) {
+        val decoder = try {
+          provider.create(encoded, params)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Throwable) {
+          null
+        }
+        if (decoder != null) return@create decoder
+      }
+
       val dispatcher = Dispatchers.Default.limitedParallelism(1)
       withContext(dispatcher) {
-        val data = Data.makeFromBytes(bytes())
+        val data = Data.makeFromBytes(encoded)
         val codec = try {
           Codec.makeFromData(data)
         } catch (e: Throwable) {
