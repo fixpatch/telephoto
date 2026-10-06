@@ -31,6 +31,13 @@ kotlin {
     named("desktopMain") { dependsOn(skikoMain) }
     iosMain { dependsOn(skikoMain) }
     named("webMain") { dependsOn(skikoMain) }
+    named("desktopTest") {
+      dependencies {
+        implementation(compose.desktop.currentOs)
+        @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+        implementation(compose.uiTest)
+      }
+    }
     androidMain {
       dependencies {
         implementation(libs.androidx.ktx.core)
