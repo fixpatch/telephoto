@@ -22,3 +22,13 @@
 では Android 側が解決できないため、公開物を FutabaViewer のリポジトリへ同梱している。
 
     scripts/publish-futaba.sh ../futabaviewer/third_party/telephoto-maven 0.20.0-futaba.N
+
+## TODO: 真の部分デコード
+
+Skia 版の `ImageRegionDecoder` は画像全体を 1/n にデコードした段から切り出すので、原寸の段は
+`SkikoSubSamplingDefaults.maxDecodedPixels` に収まる画像しか持てない(FutabaViewer では設定
+「巨大画像のメモリ上限」)。Android の `BitmapRegionDecoder` と同じく見えている所だけをデコードするには:
+
+- desktop: `javax.imageio` の `ImageReadParam.setSourceRegion` / `setSourceSubsampling`(JPEG / PNG)
+- iOS: libjpeg-turbo(`jpeg_crop_scanline` / `jpeg_skip_scanlines`)と libpng を Kotlin/Native から使う
+  (Apple の ImageIO は `kCGImageSourceSubsampleFactor` で間引けるが、原寸の部分デコードはできない)
