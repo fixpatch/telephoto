@@ -20,7 +20,3 @@ internal expect fun ImageBitmap.hasUltraHdrContent(): Boolean
 /** Switches the window into HDR color mode while [enabled]. No-op on platforms that don't support it. */
 @Composable
 internal expect fun UltraHdrColorModeEffect(enabled: Boolean)
-
-/** Whether this is running inside a screenshot test or an IDE preview, where images are not decoded. */
-@Composable
-internal expect fun isInScreenshotTest(): Boolean

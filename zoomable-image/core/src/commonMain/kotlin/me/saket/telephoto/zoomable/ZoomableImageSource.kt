@@ -11,6 +11,7 @@ import me.saket.telephoto.subsamplingimage.ImageBitmapOptions
 import me.saket.telephoto.subsamplingimage.SubSamplingImageSource
 import me.saket.telephoto.zoomable.ZoomableImageSource.ImageDelegate
 import me.saket.telephoto.zoomable.ZoomableImageSource.ResolveResult
+import kotlin.jvm.JvmInline
 import kotlin.time.Duration
 
 /**

@@ -18,7 +18,7 @@ import me.saket.telephoto.subsamplingimage.internal.ImageRegionDecoder
 import me.saket.telephoto.zoomable.ZoomableContentLocation
 import me.saket.telephoto.zoomable.ZoomableContentTransformation
 import me.saket.telephoto.zoomable.ZoomableState
-import me.saket.telephoto.subsamplingimage.internal.isInScreenshotTest
+import me.saket.telephoto.zoomable.isInScreenshotTest
 import okio.IOException
 
 /**

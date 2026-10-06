@@ -1,6 +1,6 @@
 package me.saket.telephoto.zoomable.internal
 
-import android.annotation.SuppressLint
+
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.node.ModifierNodeElement
@@ -10,7 +10,7 @@ internal fun Modifier.onAttached(callback: suspend () -> Unit): Modifier {
   return this.then(OnAttachedNodeElement(callback))
 }
 
-@SuppressLint("ModifierNodeInspectableProperties")
+@Suppress("ModifierNodeInspectableProperties")
 private data class OnAttachedNodeElement(
   private val callback: suspend () -> Unit,
 ) : ModifierNodeElement<OnAttachedNode>() {

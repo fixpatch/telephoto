@@ -42,7 +42,3 @@ internal actual fun UltraHdrColorModeEffect(enabled: Boolean) {
     }
   }
 }
-
-@Composable
-@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
-internal actual fun isInScreenshotTest(): Boolean = me.saket.telephoto.zoomable.isInScreenshotTest()
