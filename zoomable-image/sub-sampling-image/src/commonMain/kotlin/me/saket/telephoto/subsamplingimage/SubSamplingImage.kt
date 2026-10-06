@@ -2,12 +2,8 @@
 
 package me.saket.telephoto.subsamplingimage
 
-import android.annotation.SuppressLint
-import android.content.pm.ActivityInfo
-import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -19,7 +15,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -33,8 +28,8 @@ import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastForEach
 import me.saket.telephoto.subsamplingimage.internal.SubSamplingImageSemanticState
+import me.saket.telephoto.subsamplingimage.internal.UltraHdrColorModeEffect
 import me.saket.telephoto.subsamplingimage.internal.ViewportImageTile
-import me.saket.telephoto.subsamplingimage.internal.findActivity
 import me.saket.telephoto.subsamplingimage.internal.imageSemanticState
 import me.saket.telephoto.subsamplingimage.internal.toCeilInt
 
@@ -91,17 +86,7 @@ fun SubSamplingImage(
       }
   )
 
-  if (state.hasUltraHdrContent && SDK_INT >= 26) {
-    val context = LocalContext.current
-    DisposableEffect(Unit) {
-      val activity = context.findActivity()
-      val previousColorMode = activity.window.colorMode
-      activity.window.colorMode = ActivityInfo.COLOR_MODE_HDR
-      onDispose {
-        activity.window.colorMode = previousColorMode
-      }
-    }
-  }
+  UltraHdrColorModeEffect(enabled = state.hasUltraHdrContent)
 }
 
 private fun DrawScope.drawImageTile(
@@ -170,7 +155,7 @@ private fun Modifier.wrapContentSizeIfNeeded(imageSize: IntSize?): Modifier {
 }
 
 @Composable
-@SuppressLint("ComposeParameterOrder")
+@Suppress("ComposeParameterOrder")
 @Deprecated("Kept for binary compatibility", level = DeprecationLevel.HIDDEN)
 fun SubSamplingImage(
   state: SubSamplingImageState,

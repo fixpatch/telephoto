@@ -1,5 +1,6 @@
 package me.saket.telephoto.subsamplingimage
 
+import me.saket.telephoto.subsamplingimage.asset
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalInspectionMode
 import app.cash.paparazzi.DeviceConfig

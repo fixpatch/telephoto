@@ -24,6 +24,13 @@ kotlin {
     commonTest.dependencies {
       implementation(kotlin("test"))
     }
+    // Every non-Android target renders with Skia (skiko): they share one decoder implementation.
+    val skikoMain by creating {
+      dependsOn(commonMain.get())
+    }
+    named("desktopMain") { dependsOn(skikoMain) }
+    iosMain { dependsOn(skikoMain) }
+    named("webMain") { dependsOn(skikoMain) }
     androidMain {
       dependencies {
         implementation(libs.androidx.ktx.core)

@@ -2,6 +2,8 @@
 
 package me.saket.telephoto.zoomable.coil
 
+import me.saket.telephoto.subsamplingimage.file
+import me.saket.telephoto.subsamplingimage.contentUriOrNull
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri

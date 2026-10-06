@@ -11,16 +11,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toSize
-import me.saket.telephoto.subsamplingimage.internal.AndroidImageDecoderFactoryParams
+import me.saket.telephoto.subsamplingimage.internal.rememberImageDecoderFactoryParams
 import me.saket.telephoto.subsamplingimage.internal.ImageRegionDecoder
 import me.saket.telephoto.zoomable.ZoomableContentLocation
 import me.saket.telephoto.zoomable.ZoomableContentTransformation
 import me.saket.telephoto.zoomable.ZoomableState
-import me.saket.telephoto.zoomable.isInScreenshotTest
-import java.io.IOException
+import me.saket.telephoto.subsamplingimage.internal.isInScreenshotTest
+import okio.IOException
 
 /**
  * Create a [SubSamplingImageState] that can be used with [SubSamplingImage] which uses
@@ -105,15 +104,10 @@ private fun createImageRegionDecoder(
   var decoder by remember(imageSource) { mutableStateOf<ImageRegionDecoder?>(null) }
 
   if (!isInScreenshotTest()) {
-    val context = LocalContext.current
+    val factoryParams = rememberImageDecoderFactoryParams(imageOptions)
     LaunchedEffect(imageSource) {
       try {
-        decoder = imageSource.decoder().create(
-          AndroidImageDecoderFactoryParams(
-            context = context,
-            imageOptions = imageOptions,
-          )
-        )
+        decoder = imageSource.decoder().create(factoryParams)
       } catch (e: IOException) {
         errorReporter.onImageLoadingFailed(e, imageSource)
       }

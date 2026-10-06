@@ -1,6 +1,5 @@
 package me.saket.telephoto.subsamplingimage.internal
 
-import android.content.Context
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -48,8 +47,3 @@ interface ImageRegionDecoder {
     val imageOptions: ImageBitmapOptions
   }
 }
-
-internal data class AndroidImageDecoderFactoryParams(
-  val context: Context,
-  override val imageOptions: ImageBitmapOptions,
-) : ImageRegionDecoder.FactoryParams

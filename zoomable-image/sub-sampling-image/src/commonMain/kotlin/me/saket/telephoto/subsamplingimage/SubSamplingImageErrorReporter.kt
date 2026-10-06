@@ -1,6 +1,7 @@
 package me.saket.telephoto.subsamplingimage
 
-import java.io.IOException
+import me.saket.telephoto.subsamplingimage.internal.isDebugBuild
+import okio.IOException
 
 interface SubSamplingImageErrorReporter {
 
@@ -10,7 +11,7 @@ interface SubSamplingImageErrorReporter {
   companion object {
     val NoOpInRelease = object : SubSamplingImageErrorReporter {
       override fun onImageLoadingFailed(e: IOException, imageSource: SubSamplingImageSource) {
-        if (BuildConfig.DEBUG) {
+        if (isDebugBuild) {
           // I'm not entirely convinced with this, but I think failure in loading of bitmaps from
           // local storage is not a good sign and should be surfaced ASAP in debug builds. Please
           // file an issue on https://github.com/saket/telephoto/issues if you think otherwise.

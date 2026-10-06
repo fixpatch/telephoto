@@ -1,5 +1,7 @@
 package me.saket.telephoto.subsamplingimage.util
 
+import me.saket.telephoto.subsamplingimage.rawSource
+import me.saket.telephoto.subsamplingimage.file
 import android.content.Context
 import android.util.TypedValue
 import kotlinx.coroutines.Dispatchers

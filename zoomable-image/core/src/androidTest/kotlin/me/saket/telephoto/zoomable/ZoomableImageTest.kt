@@ -2,6 +2,7 @@
 
 package me.saket.telephoto.zoomable
 
+import me.saket.telephoto.subsamplingimage.asset
 import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.view.KeyEvent

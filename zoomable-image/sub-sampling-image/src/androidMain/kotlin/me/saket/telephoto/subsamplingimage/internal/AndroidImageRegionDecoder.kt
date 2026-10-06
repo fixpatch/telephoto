@@ -16,6 +16,7 @@ import me.saket.telephoto.subsamplingimage.ImageBitmapOptions
 import me.saket.telephoto.subsamplingimage.SubSamplingImageSource
 import me.saket.telephoto.subsamplingimage.internal.ExifMetadata.ImageOrientation
 import me.saket.telephoto.subsamplingimage.internal.ImageRegionDecoder.DecodeResult
+import me.saket.telephoto.subsamplingimage.androidColorSpace
 import me.saket.telephoto.subsamplingimage.toAndroidConfig
 
 /** Bitmap decoder backed by Android's [BitmapRegionDecoder]. */

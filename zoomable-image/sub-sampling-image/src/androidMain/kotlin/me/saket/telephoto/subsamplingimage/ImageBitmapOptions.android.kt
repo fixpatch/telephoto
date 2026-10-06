@@ -2,56 +2,28 @@ package me.saket.telephoto.subsamplingimage
 
 import android.graphics.Bitmap
 import android.os.Build.VERSION.SDK_INT
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmapConfig
-import androidx.compose.ui.graphics.colorspace.ColorSpace
 import androidx.compose.ui.graphics.toAndroidColorSpace
 import androidx.compose.ui.graphics.toComposeColorSpace
-import dev.drewhamilton.poko.Poko
-import kotlin.LazyThreadSafetyMode.NONE
 import android.graphics.ColorSpace as AndroidColorSpace
-import androidx.compose.ui.graphics.colorspace.ColorSpace as ComposeColorSpace
 
 /**
- * @param colorSpace If this is null, Android's decoder will pick either the color space
- * embedded in the image or the color space best suited for the requested image configuration.
+ * The color space to request from Android's decoders. Prefers the color space that was read
+ * from an Android bitmap (see [ImageBitmapOptions] factory below) over a conversion of the
+ * Compose color space.
  */
-@Poko
-@Immutable
-class ImageBitmapOptions internal constructor(
-  val config: ImageBitmapConfig = ImageBitmapConfig.Argb8888,
-  internal val androidColorSpace: AndroidColorSpace? = null,
-  colorSpace: () -> ColorSpace?,
-) {
-  // The compose color space is computed lazily to prevent crashes by bad Android <> Compose UI
-  // conversions. Example: https://issuetracker.google.com/issues/377021410#comment3
-  @Suppress("unused")
-  val colorSpace: ColorSpace? by lazy(NONE) { colorSpace() }
-
-  // TODO: remove when https://issuetracker.google.com/issues/377021410 is resolved.
-  constructor(
-    config: ImageBitmapConfig = ImageBitmapConfig.Argb8888,
-    colorSpace: ComposeColorSpace? = null,
-  ) : this(
-    config = config,
-    colorSpace = { colorSpace },
-    androidColorSpace = if (SDK_INT >= 26) colorSpace?.toAndroidColorSpace() else null,
-  )
-
-  @Deprecated("", level = DeprecationLevel.HIDDEN)  // For binary compatibility.
-  constructor(config: ImageBitmapConfig) : this(config, null)
-
-  companion object {
-    val Default = ImageBitmapOptions()
+internal val ImageBitmapOptions.androidColorSpace: AndroidColorSpace?
+  get() = when {
+    SDK_INT < 26 -> null
+    else -> platformColorSpace as AndroidColorSpace? ?: colorSpace?.toAndroidColorSpace()
   }
-}
 
 fun ImageBitmapOptions(from: Bitmap): ImageBitmapOptions {
   val androidColorSpace = if (SDK_INT >= 26) from.colorSpace else null
   return ImageBitmapOptions(
     config = from.config!!.toComposeConfig(),
     colorSpace = { if (SDK_INT >= 26) androidColorSpace?.toComposeColorSpace() else null },
-    androidColorSpace = androidColorSpace,
+    platformColorSpace = androidColorSpace,
   )
 }
 

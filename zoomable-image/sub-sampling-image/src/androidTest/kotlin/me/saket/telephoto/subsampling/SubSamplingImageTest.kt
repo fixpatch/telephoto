@@ -2,6 +2,11 @@
 
 package me.saket.telephoto.subsampling
 
+import me.saket.telephoto.subsamplingimage.resource
+import me.saket.telephoto.subsamplingimage.rawSource
+import me.saket.telephoto.subsamplingimage.file
+import me.saket.telephoto.subsamplingimage.contentUri
+import me.saket.telephoto.subsamplingimage.asset
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory

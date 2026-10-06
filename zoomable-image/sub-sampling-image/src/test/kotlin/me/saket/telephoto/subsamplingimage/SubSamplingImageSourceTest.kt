@@ -1,5 +1,6 @@
 package me.saket.telephoto.subsamplingimage
 
+import me.saket.telephoto.subsamplingimage.contentUri
 import android.net.Uri
 import androidx.compose.ui.graphics.ImageBitmap
 import assertk.assertThat

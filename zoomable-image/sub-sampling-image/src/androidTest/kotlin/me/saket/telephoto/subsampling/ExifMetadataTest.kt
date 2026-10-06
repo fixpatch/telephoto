@@ -1,5 +1,6 @@
 package me.saket.telephoto.subsampling
 
+import me.saket.telephoto.subsamplingimage.asset
 import android.content.Context
 import android.os.Build.VERSION.SDK_INT
 import androidx.test.platform.app.InstrumentationRegistry

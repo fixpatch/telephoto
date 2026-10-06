@@ -1,6 +1,5 @@
 package me.saket.telephoto.subsamplingimage
 
-import android.os.Build.VERSION.SDK_INT
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -12,7 +11,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.IntSize
@@ -34,6 +32,7 @@ import me.saket.telephoto.subsamplingimage.internal.calculateFor
 import me.saket.telephoto.subsamplingimage.internal.contains
 import me.saket.telephoto.subsamplingimage.internal.fastMapNotNull
 import me.saket.telephoto.subsamplingimage.internal.generate
+import me.saket.telephoto.subsamplingimage.internal.hasUltraHdrContent
 import me.saket.telephoto.subsamplingimage.internal.isNotEmpty
 import me.saket.telephoto.subsamplingimage.internal.maxScale
 import me.saket.telephoto.subsamplingimage.internal.overlaps
@@ -204,10 +203,6 @@ internal class RealSubSamplingImageState(
   private fun ViewportTile.canLoadImageRegion(): Boolean {
     return isVisible && (!isBase || imageSource.preview == null)
   }
-}
-
-private fun ImageBitmap.hasUltraHdrContent(): Boolean {
-  return if (SDK_INT >= 34) asAndroidBitmap().hasGainmap() else false
 }
 
 private fun ImageBitmap.size(): IntSize = IntSize(width, height)

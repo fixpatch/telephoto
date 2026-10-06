@@ -2,6 +2,7 @@
 
 package me.saket.telephoto.zoomable.glide
 
+import me.saket.telephoto.subsamplingimage.file
 import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable

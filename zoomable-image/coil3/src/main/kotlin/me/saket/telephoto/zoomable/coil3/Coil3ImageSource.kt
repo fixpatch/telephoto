@@ -2,6 +2,8 @@
 
 package me.saket.telephoto.zoomable.coil3
 
+import me.saket.telephoto.subsamplingimage.file
+import me.saket.telephoto.subsamplingimage.contentUriOrNull
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
