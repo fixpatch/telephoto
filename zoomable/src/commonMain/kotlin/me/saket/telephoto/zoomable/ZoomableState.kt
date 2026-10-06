@@ -278,6 +278,24 @@ sealed interface ZoomableState {
   )
 
   /**
+   * Same as [zoomTo], but the target zoom is **not** coerced between the limits described by
+   * [ZoomSpec] (futaba fork).
+   *
+   * Used for showing content at its original size (`zoomFactor = 1f`) even when that is smaller
+   * than the minimum zoom (small content scaled up to fit the viewport) or larger than the maximum.
+   * The limits are not changed: the next zoom gesture, [zoomBy] or [zoomTo] brings the content
+   * back within them.
+   *
+   * @param zoomFactor Target zoom level for the content relative to its *original* size.
+   */
+  @ExperimentalTelephotoApi
+  suspend fun zoomToIgnoringLimits(
+    zoomFactor: Float,
+    centroid: Offset = Offset.Unspecified,
+    animationSpec: AnimationSpec<Float> = DefaultZoomAnimationSpec,
+  )
+
+  /**
    * Animate pan by [offset] in pixels and suspend until it's finished.
    *
    * @param offset Distance for this pan, in the viewport's coordinate space. To specify

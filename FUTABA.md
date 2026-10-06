@@ -15,6 +15,8 @@
 - `zoomable-image:core` / `zoomable-image:coil3`: KMP 化
 - `zoomable-image:coil3`: 画像から Painter を作る処理を差し替えられる
   `ZoomableImageSource.coil(model, imageLoader, painterFactory)` を追加
+- `zoomable`: `ZoomSpec` の最小・最大で丸めない `ZoomableState.zoomToIgnoringLimits()` を追加
+  (FutabaViewer の「原寸表示」用。範囲は変えないので、次のピンチやホイールで範囲内へ戻る)
 
 ## FutabaViewer への同梱
 

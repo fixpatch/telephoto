@@ -500,6 +500,20 @@ internal class RealZoomableState internal constructor(
     )
   }
 
+  override suspend fun zoomToIgnoringLimits(
+    zoomFactor: Float,
+    centroid: Offset,
+    animationSpec: AnimationSpec<Float>,
+  ) {
+    zoomTo(
+      zoomFactor = zoomFactor,
+      focal = ZoomFocalPoint.zoomAround(SpatialOffset(centroid, CoordinateSpace.Viewport)),
+      animationSpec = animationSpec,
+      animatePanEvenIfZoomDeltaIsZero = true,
+      coerceWithinZoomLimits = false,
+    )
+  }
+
   override suspend fun panBy(offset: SpatialOffset, animationSpec: AnimationSpec<Offset>) {
     awaitUntilIsReadyForInteraction()
 
@@ -525,6 +539,7 @@ internal class RealZoomableState internal constructor(
     focal: ZoomFocalPoint,
     animationSpec: AnimationSpec<Float>,
     animatePanEvenIfZoomDeltaIsZero: Boolean,
+    coerceWithinZoomLimits: Boolean = true,
   ) {
     if (zoomFactor <= 0) return
     awaitUntilIsReadyForInteraction()
@@ -533,7 +548,10 @@ internal class RealZoomableState internal constructor(
     val targetZoom = AbsoluteZoomFactor.forFinalZoom(
       baseZoom = gestureStateInputs.baseZoom,
       finalZoom = zoomFactor,
-    ).coerceUserZoomIn(zoomSpec.range)  // Prevent overzooms. This doesn't support OverzoomEffect yet.
+    ).let {
+      // Prevent overzooms. This doesn't support OverzoomEffect yet.
+      if (coerceWithinZoomLimits) it.coerceUserZoomIn(zoomSpec.range) else it
+    }
 
     val centroid = focal.computeCentroid(this, zoomFactor)
     val centroidInViewport = with(coordinateSystem) {
