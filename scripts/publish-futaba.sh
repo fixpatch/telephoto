@@ -43,6 +43,8 @@ for dir in "$staging"/me/saket/telephoto/*/; do
   cp -R "$dir$version" "$out/me/saket/telephoto/$name/"
   # maven-metadata-local.xml は mavenLocal 専用。ファイルリポジトリとしては要らない。
   find "$out/me/saket/telephoto/$name" -name 'maven-metadata-local.xml' -delete
+  # javadoc はビルドに使わない(全体の 2/3 を占める)。ソースの jar は IDE で読めるよう残す。
+  find "$out/me/saket/telephoto/$name" -name '*-javadoc.jar*' -delete
 done
 
 echo "Published telephoto $version ($(git -C "$root" rev-parse --short HEAD)) to $out"
