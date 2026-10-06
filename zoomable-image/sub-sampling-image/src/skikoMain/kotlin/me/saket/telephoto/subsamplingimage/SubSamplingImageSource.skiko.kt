@@ -35,7 +35,7 @@ fun SubSamplingImageSource.Companion.file(
   fileSystem: FileSystem,
   preview: ImageBitmap? = null,
   onClose: Closeable? = null,
-  maxDecodedPixels: Long = SkikoImageRegionDecoder.DefaultMaxDecodedPixels,
+  maxDecodedPixels: Long = SkikoSubSamplingDefaults.maxDecodedPixels,
 ): SubSamplingImageSource = SkikoFileImageSource(path, fileSystem, preview, onClose, maxDecodedPixels)
 
 /**
@@ -52,7 +52,7 @@ fun SubSamplingImageSource.Companion.bytes(
   bytes: ByteArray,
   preview: ImageBitmap? = null,
   onClose: Closeable? = null,
-  maxDecodedPixels: Long = SkikoImageRegionDecoder.DefaultMaxDecodedPixels,
+  maxDecodedPixels: Long = SkikoSubSamplingDefaults.maxDecodedPixels,
 ): SubSamplingImageSource = SkikoBytesImageSource(bytes, preview, onClose, maxDecodedPixels)
 
 @Immutable
