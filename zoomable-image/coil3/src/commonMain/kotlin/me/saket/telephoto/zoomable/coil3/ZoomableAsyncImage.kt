@@ -17,6 +17,9 @@ import androidx.compose.ui.layout.ContentScale
 import coil3.compose.LocalPlatformContext
 import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.compose.asPainter
+import androidx.compose.ui.graphics.painter.Painter
 import coil3.annotation.ExperimentalCoilApi
 import coil3.SingletonImageLoader
 import me.saket.telephoto.zoomable.DoubleClickToZoomListener
@@ -199,13 +202,41 @@ fun ZoomableImageSource.Companion.coil(
   model: Any?,
   imageLoader: ImageLoader = SingletonImageLoader.get(LocalPlatformContext.current)
 ): ZoomableImageSource {
+  return coil(model, imageLoader, CoilImagePainterFactory.Default)
+}
+
+/**
+ * Same as the other `coil()` overload, but lets the caller decide how images that won't be
+ * sub-sampled (animated images, SVGs, etc.) are drawn. This is useful when an app decodes
+ * images into its own [coil3.Image] types, for example to play animated images on platforms
+ * where Coil doesn't support them.
+ */
+@Composable
+@OptIn(ExperimentalCoilApi::class)
+fun ZoomableImageSource.Companion.coil(
+  model: Any?,
+  imageLoader: ImageLoader,
+  painterFactory: CoilImagePainterFactory,
+): ZoomableImageSource {
   val model = rememberUpdatedState(model)
   val imageLoader = rememberUpdatedState(imageLoader)
+  val painterFactory = rememberUpdatedState(painterFactory)
   return remember {
     Coil3ImageSource(
       model = model,
       imageLoader = imageLoader,
+      painterFactory = painterFactory,
     )
+  }
+}
+
+/** Creates a [Painter] for an image loaded by Coil that won't be sub-sampled. */
+fun interface CoilImagePainterFactory {
+  fun create(image: coil3.Image, context: PlatformContext): Painter
+
+  companion object {
+    /** Coil's own painter for the image. */
+    val Default = CoilImagePainterFactory { image, context -> image.asPainter(context) }
   }
 }
 

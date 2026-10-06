@@ -61,6 +61,7 @@ import coil3.size.Size as CoilSize
 internal data class Coil3ImageSource(
   private val model: State<Any?>,
   private val imageLoader: State<ImageLoader>,
+  private val painterFactory: State<CoilImagePainterFactory> = mutableStateOf(CoilImagePainterFactory.Default),
 ) : ZoomableImageSource {
 
   @Composable
@@ -94,6 +95,7 @@ internal data class Coil3ImageSource(
                 .build()
           }
         RealResolver(
+          painterFactory = painterFactory,
           requests = requests,
           imageLoaders = snapshotFlow { imageLoader.value },
           sizeResolver = { canvasSize.first().toCoilSize() },
@@ -114,6 +116,7 @@ private interface AbstractImageResolver {
 }
 
 private class RealResolver(
+  private val painterFactory: State<CoilImagePainterFactory>,
   private val requests: Flow<ImageRequest>,
   private val imageLoaders: Flow<ImageLoader>,
   private val sizeResolver: SizeResolver,
@@ -190,7 +193,7 @@ private class RealResolver(
         )
       } else {
         ZoomableImageSource.PainterDelegate(
-          painter = result.image?.asPainter(request.context)
+          painter = result.image?.let { painterFactory.value.create(it, request.context) }
         )
       },
     )
