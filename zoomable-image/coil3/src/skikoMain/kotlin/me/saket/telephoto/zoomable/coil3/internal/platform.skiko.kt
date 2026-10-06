@@ -6,6 +6,7 @@ import coil3.BitmapImage
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.decode.DataSource
+import coil3.filePath
 import coil3.request.Options
 import coil3.request.SuccessResult
 import kotlinx.coroutines.CoroutineDispatcher
@@ -56,7 +57,7 @@ internal suspend fun localFileImageSourceOrNull(
   val request = result.request
   val path = when (val mapped = imageLoader.components.map(request.data, Options(request.context))) {
     is Path -> mapped
-    is coil3.Uri -> mapped.takeIf { it.scheme == null || it.scheme == "file" }?.path?.toPath()
+    is coil3.Uri -> mapped.localFilePathOrNull()
     else -> null
   } ?: return null
 
@@ -69,4 +70,15 @@ internal suspend fun localFileImageSourceOrNull(
     if (!exists) return null
   }
   return SubSamplingImageSource.file(path, fileSystem, preview)
+}
+
+/**
+ * A `file:` (or scheme-less) uri as a file path, the same way Coil's `FileUriFetcher` reads it.
+ *
+ * [filePath] rebuilds the path with the uri's separator. Using `Uri.path` directly breaks on Windows,
+ * where Coil stores `K:\dev\image.png` as `K:/dev/image.png`, which isn't an absolute path to okio.
+ */
+internal fun coil3.Uri.localFilePathOrNull(): Path? {
+  if (scheme != null && scheme != "file") return null
+  return filePath?.toPath()
 }
