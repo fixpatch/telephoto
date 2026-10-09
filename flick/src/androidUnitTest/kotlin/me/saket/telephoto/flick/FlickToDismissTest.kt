@@ -202,6 +202,95 @@ class FlickToDismissTest {
     assertThat(state.willDismissOnRelease(velocity = 0f)).isTrue()
   }
 
+  @Test fun `default mode retains bidirectional distance and velocity dismissal`(
+    @TestParameter swipeDirection: SwipeDirectionParam
+  ) = runTest {
+    val state = RealFlickToDismissState()
+    state.contentSize = IntSize(width = 300, height = 1000)
+    val direction = if (swipeDirection == DownwardSwipe) 1f else -1f
+    val flingVelocity = state.contentSize.height * state.dismissThresholdRatio * FlingSlopMultiplier + 1f
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, direction))
+    }
+    assertThat(state.willDismissOnRelease(velocity = 0f)).isFalse()
+    assertThat(state.willDismissOnRelease(velocity = direction * flingVelocity)).isTrue()
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, direction * state.contentSize.height * state.dismissThresholdRatio))
+    }
+    assertThat(state.willDismissOnRelease(velocity = 0f)).isTrue()
+  }
+
+  @Test fun `downward only mode clamps upward movement and reversal at the origin`() = runTest {
+    val state = RealFlickToDismissState(downwardOnly = true)
+    state.contentSize = IntSize(width = 300, height = 1000)
+    val flingVelocity = state.contentSize.height * state.dismissThresholdRatio * FlingSlopMultiplier + 1f
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, -300f))
+    }
+    assertThat(state.offset).isEqualTo(Offset.Zero)
+    assertThat(state.offsetFraction).isEqualTo(0f)
+    assertThat(state.gestureState).isEqualTo(Idle)
+    assertThat(state.willDismissOnRelease(velocity = -flingVelocity)).isFalse()
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, 250f))
+    }
+    assertThat(state.gestureState).isEqualTo(Dragging(willDismissOnRelease = true))
+    assertThat(state.willDismissOnRelease(velocity = 0f)).isTrue()
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, -200f))
+    }
+    assertThat(state.offset.y).isEqualTo(50f)
+    assertThat(state.gestureState).isEqualTo(Dragging(willDismissOnRelease = false))
+    assertThat(state.willDismissOnRelease(velocity = -flingVelocity)).isFalse()
+    assertThat(state.willDismissOnRelease(velocity = flingVelocity)).isTrue()
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, -100f))
+    }
+    assertThat(state.offset).isEqualTo(Offset.Zero)
+    assertThat(state.gestureState).isEqualTo(Idle)
+    assertThat(state.willDismissOnRelease(velocity = -flingVelocity)).isFalse()
+    assertThat(state.willDismissOnRelease(velocity = flingVelocity)).isFalse()
+
+    state.draggableState.drag {
+      dragBy(Offset(0f, 1f))
+    }
+    assertThat(state.willDismissOnRelease(velocity = flingVelocity)).isTrue()
+  }
+
+  @Test fun `downward only release rejects negative displacement`() {
+    val state = RealFlickToDismissState(downwardOnly = true)
+    state.contentSize = IntSize(width = 300, height = 1000)
+    // Negative offsets can still occur during animations; they must never allow upward dismissal.
+    state.offset = Offset(0f, -300f)
+    state.gestureState = Dragging(willDismissOnRelease = true)
+    assertThat(state.willDismissOnRelease(velocity = 0f)).isFalse()
+    assertThat(state.willDismissOnRelease(velocity = -10000f)).isFalse()
+    assertThat(state.willDismissOnRelease(velocity = 10000f)).isFalse()
+  }
+
+  @Test fun `downward only clamp does not constrain animation offsets`() = runTest {
+    val state = RealFlickToDismissState(downwardOnly = true)
+    state.gestureState = Resetting
+    state.draggableState.drag {
+      dragBy(Offset(0f, -10f))
+    }
+    assertThat(state.offset.y).isEqualTo(-10f)
+    assertThat(state.gestureState).isEqualTo(Resetting)
+
+    state.gestureState = Dismissing(animationDuration = 1.seconds)
+    state.draggableState.drag {
+      dragBy(Offset(0f, -10f))
+    }
+    assertThat(state.offset.y).isEqualTo(-20f)
+    assertThat(state.gestureState).isInstanceOf<Dismissing>()
+  }
+
   // todo: use paparazzi.gif
   @Test fun `play reset animation`() = runTest {
     val state = RealFlickToDismissState()

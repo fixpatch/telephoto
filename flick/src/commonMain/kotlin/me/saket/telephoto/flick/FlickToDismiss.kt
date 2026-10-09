@@ -50,7 +50,8 @@ fun FlickToDismiss(
       .verticalDragThenDraggable2D(
         enabled = enabled,
         state = state.draggableState,
-        startDragImmediately = { state.gestureState is Resetting },
+        startDragImmediately = { !state.downwardOnly && state.gestureState is Resetting },
+        canStartDrag = { verticalDelta -> !state.downwardOnly || verticalDelta > 0f },
         onDragStarted = { state.handleOnDragStarted(it) },
         onDragStopped = { velocity ->
           scope.launch {

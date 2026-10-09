@@ -17,12 +17,16 @@ import kotlin.time.Duration
  *
  * @param rotateOnDrag When enabled, a subtle rotation is applied to the content while its
  * being dragged.
+ *
+ * @param downwardOnly When enabled, only downward drags can start a dismiss gesture. Upward
+ * drags remain available to the content, and an active dismiss drag cannot move above its origin.
  */
 @Composable
 fun rememberFlickToDismissState(
   dismissThresholdRatio: Float = 0.2f,
   rotateOnDrag: Boolean = true,
   rubberBandingSpec: RubberBandingSpec = RubberBandingSpec(resistanceFactor = 2f),
+  downwardOnly: Boolean = false,
 ): FlickToDismissState {
   check(dismissThresholdRatio > 0f) {
     "The dismiss threshold ratio must be a non-zero value."
@@ -34,6 +38,7 @@ fun rememberFlickToDismissState(
     it.rotateOnDrag = rotateOnDrag
     it.dismissThresholdRatio = dismissThresholdRatio
     it.rubberBandingSpec = rubberBandingSpec
+    it.downwardOnly = downwardOnly
   }
 }
 

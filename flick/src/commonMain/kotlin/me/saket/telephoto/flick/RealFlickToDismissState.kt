@@ -33,12 +33,14 @@ internal class RealFlickToDismissState(
   rotateOnDrag: Boolean = true,
   rubberBandingSpec: RubberBandingSpec = RubberBandingSpec.Disabled,
   internal var dismissThresholdRatio: Float = 0.2f, // Kept in sync with rememberFlickToDismissState().
+  downwardOnly: Boolean = false,
 ) : FlickToDismissState {
 
   override var offset: Offset by mutableStateOf(Offset.Zero)
   override var gestureState: GestureState by mutableStateOf(Idle)
   internal var rotateOnDrag: Boolean by mutableStateOf(rotateOnDrag)
   internal var rubberBandingSpec: RubberBandingSpec by mutableStateOf(rubberBandingSpec)
+  internal var downwardOnly: Boolean by mutableStateOf(downwardOnly)
 
   override val rotationZ: Float by derivedStateOf {
     if (this.rotateOnDrag) {
@@ -61,14 +63,21 @@ internal class RealFlickToDismissState(
   private var dragStartedOnLeftSide: Boolean by mutableStateOf(false)
 
   internal val draggableState = Draggable2DState { delta ->
-    offset += delta
+    val newOffset = offset + delta
+    offset = if (downwardOnly && (gestureState is Idle || gestureState is Dragging)) {
+      newOffset.copy(y = newOffset.y.coerceAtLeast(0f))
+    } else {
+      newOffset
+    }
 
     gestureState = when (gestureState) {
       is Idle, is Dragging -> {
         if (abs(offset.y) < ZoomDeltaEpsilon) {
           Idle
         } else {
-          Dragging(willDismissOnRelease = abs(offsetFraction) > dismissThresholdRatio)
+          Dragging(
+            willDismissOnRelease = (!downwardOnly || offset.y > 0f) && offsetFraction > dismissThresholdRatio,
+          )
         }
       }
       is Resetting, is Dismissing -> gestureState
@@ -85,7 +94,11 @@ internal class RealFlickToDismissState(
       !is Dragging -> false
       else -> {
         val thresholdVelocity = contentSize.height * dismissThresholdRatio * FlingSlopMultiplier
-        (state.willDismissOnRelease || abs(velocity) >= thresholdVelocity)
+        if (downwardOnly) {
+          offset.y > 0f && (state.willDismissOnRelease || velocity >= thresholdVelocity)
+        } else {
+          state.willDismissOnRelease || abs(velocity) >= thresholdVelocity
+        }
       }
     }
   }

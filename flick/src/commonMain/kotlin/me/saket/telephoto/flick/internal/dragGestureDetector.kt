@@ -33,6 +33,7 @@ internal fun Modifier.verticalDragThenDraggable2D(
   state: Draggable2DState,
   enabled: Boolean,
   startDragImmediately: () -> Boolean,
+  canStartDrag: (verticalDelta: Float) -> Boolean,
   onDragStarted: (startedPosition: Offset) -> Unit,
   onDragStopped: (velocity: Velocity) -> Unit,
 ): Modifier {
@@ -67,6 +68,7 @@ internal fun Modifier.verticalDragThenDraggable2D(
       launch(start = CoroutineStart.UNDISPATCHED) {
         detectVerticalThenAllDrags(
           shouldAwaitTouchSlop = { !startDragImmediately() },
+          canStartDrag = canStartDrag,
           onEvent = dragEvents::trySend,
         )
       }
@@ -76,12 +78,14 @@ internal fun Modifier.verticalDragThenDraggable2D(
 
 private suspend fun PointerInputScope.detectVerticalThenAllDrags(
   shouldAwaitTouchSlop: () -> Boolean,
+  canStartDrag: (verticalDelta: Float) -> Boolean,
   onEvent: (DragEvent) -> Unit,
 ) {
   val velocityTracker = VelocityTracker()
   try {
     detectVerticalThenAllDrags(
       shouldAwaitTouchSlop = shouldAwaitTouchSlop,
+      canStartDrag = canStartDrag,
       onDragStart = { down, slopTriggerChange, overSlopOffset ->
         velocityTracker.addPointerInputChange(down)
         onEvent(DragStarted(slopTriggerChange.position - overSlopOffset))
@@ -107,6 +111,7 @@ private suspend fun PointerInputScope.detectVerticalThenAllDrags(
 /** Adapted from [detectDragGestures]. */
 private suspend fun PointerInputScope.detectVerticalThenAllDrags(
   shouldAwaitTouchSlop: () -> Boolean,
+  canStartDrag: (verticalDelta: Float) -> Boolean,
   onDragStart: (down: PointerInputChange, slopTriggerChange: PointerInputChange, overSlopOffset: Offset) -> Unit,
   onDragEnd: (change: PointerInputChange) -> Unit,
   onDragCancel: () -> Unit,
@@ -127,14 +132,22 @@ private suspend fun PointerInputScope.detectVerticalThenAllDrags(
     var overslop = Offset.Zero
 
     if (awaitTouchSlop) {
+      var startDirectionRejected = false
       // Note for self: this runs in a loop to find the
       // first _unconsumed_ event that exceeds the slop.
       do {
         // todo: replace this with awaitVerticalPointerSlopOrCancellation when
         //  https://issuetracker.google.com/issues/298903681 is released.
         drag = awaitVerticalTouchSlopOrCancellation(down.id) { change, over ->
-          change.consume()
-          overslop = Offset(0f, over)
+          val startDirection = if (over == 0f) change.positionChange().y else over
+          if (!startDirectionRejected && canStartDrag(startDirection)) {
+            change.consume()
+            overslop = Offset(0f, over)
+          } else {
+            // Reject the whole gesture without consuming movement, including if it later reverses.
+            // Children can continue handling image pan/zoom until all pointers are lifted.
+            startDirectionRejected = true
+          }
         }
       } while (drag != null && !drag.isConsumed)
     } else {

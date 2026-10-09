@@ -17,6 +17,11 @@
   `ZoomableImageSource.coil(model, imageLoader, painterFactory)` を追加
 - `zoomable`: `ZoomSpec` の最小・最大で丸めない `ZoomableState.zoomToIgnoringLimits()` を追加
   (FutabaViewer の「原寸表示」用。範囲は変えないので、次のピンチやホイールで範囲内へ戻る)
+- `flick`: `rememberFlickToDismissState(..., downwardOnly = true)` で下方向だけのスワイプ終了を選べる
+  (既定は `false` で従来どおり上下両方向)。上方向から始まるドラッグは取得・消費せず、
+  画像のパン・ズームへ渡す。下方向の終了ドラッグを開始した後は原点まで逆戻りできるが、
+  ユーザー操作中の Y オフセットは負にならない。距離しきい値・速度による終了判定も下方向だけに制限する。
+  しきい値前後の spring による抵抗切り替え・往復時の触覚フィードバックは変更しない。
 
 ## FutabaViewer への同梱
 
