@@ -12,6 +12,9 @@
   - JPEG は 1/2・1/4・1/8、WebP は任意の大きさへデコード段階で縮める(PNG 等は原寸で一度デコード)
   - 保持する画素数は `maxDecodedPixels`(既定 4096x4096)で上限を掛ける
   - EXIF の向きは段を作る時に適用する
+- `sub-sampling-image`: プレビューが画面上で引き伸ばされ、ベースタイルの方が細かい時はベースタイルをデコードする
+  (本家はプレビューがあればベースタイルを読まない。画像が表示領域の2倍未満だとベースタイルが原寸=前景タイルが無く、
+  100% まで拡大してもプレビューを引き伸ばしたままぼやけていた)
 - `zoomable-image:core` / `zoomable-image:coil3`: KMP 化
 - `zoomable-image:coil3`: 画像から Painter を作る処理を差し替えられる
   `ZoomableImageSource.coil(model, imageLoader, painterFactory)` を追加

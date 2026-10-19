@@ -196,12 +196,25 @@ internal class RealSubSamplingImageState(
 
   /**
    * Visible foreground tiles should always be decoded. The low-res base tile only needs to be
-   * decoded when there is no preview bitmap, because a preview can already act as the base layer.
-   * Skipping that decode avoids asking BitmapRegionDecoder for a large full-image region while the
-   * user is still at the initial fitted scale.
+   * decoded when the preview bitmap can't act as the base layer. Skipping that decode avoids asking
+   * BitmapRegionDecoder for a large full-image region while the user is still at the initial fitted scale.
+   *
+   * The preview is decoded for the canvas size at load time, so it can be smaller than the base tile.
+   * When the image is less than twice as large as the viewport, the base tile is decoded at full
+   * resolution (sample size 1) and no foreground tiles are ever generated. Zooming in (or enlarging
+   * the viewport) would then keep stretching the preview, even at 100%. Decode the base tile once
+   * the preview is stretched on screen and the base tile carries more pixels than the preview.
    */
   private fun ViewportTile.canLoadImageRegion(): Boolean {
-    return isVisible && (!isBase || imageSource.preview == null)
+    if (!isVisible) return false
+    if (!isBase) return true
+    val preview = imageSource.preview ?: return true
+    // Long sides are compared so that EXIF rotation can't mismatch width and height.
+    val previewLongSide = maxOf(preview.width, preview.height)
+    val displayedLongSide = maxOf(bounds.width, bounds.height)
+    val decodedLongSide = maxOf(region.bounds.width, region.bounds.height) / region.sampleSize.size
+    // One pixel of tolerance for rounding in the preview's and the tile's sizes.
+    return minOf(displayedLongSide, decodedLongSide) > previewLongSide + 1
   }
 }
 
