@@ -25,6 +25,10 @@
   画像のパン・ズームへ渡す。下方向の終了ドラッグを開始した後は原点まで逆戻りできるが、
   ユーザー操作中の Y オフセットは負にならない。距離しきい値・速度による終了判定も下方向だけに制限する。
   しきい値前後の spring による抵抗切り替え・往復時の触覚フィードバックは変更しない。
+- `flick`: `rotateOnDrag = false` のときは `FlickToDismiss` に回転用の `graphicsLayer` を入れない。
+  Compose 1.8.3(FutabaViewer old-ui。minSdk 21 のため上げられない)では、状態を読むこの layer の内側で
+  `ZoomableImage` が Painter で描くアニメ GIF をページャで2枚以上先から送ると、zoomable の拡大が二重に掛かって
+  画面からはみ出していた(KY-51B で再現。layer を外すか、状態を読まない layer なら起きない)。
 
 ## FutabaViewer への同梱
 

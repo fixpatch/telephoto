@@ -46,7 +46,10 @@ fun FlickToDismiss(
   Box(
     modifier = modifier
       .offset { offset.value.round() }
-      .graphicsLayer { rotationZ = state.rotationZ }
+      // Compose 1.8 系では、状態を読む graphicsLayer の内側にあるアニメ画像(Painter 描画)が、
+      // 2 枚以上離れたページからページャで送られたときに zoomable の拡大を二重に掛けて描かれることがある。
+      // 回転しないなら layer 自体を入れない。
+      .then(if (state.rotateOnDrag) Modifier.graphicsLayer { rotationZ = state.rotationZ } else Modifier)
       .verticalDragThenDraggable2D(
         enabled = enabled,
         state = state.draggableState,
